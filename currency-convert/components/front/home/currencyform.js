@@ -1,11 +1,12 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Grid, TextField,Button } from '@material-ui/core';
+import { Box, Grid, TextField,Button,FormControl,Select } from '@material-ui/core';
 import { Formik, useFormik } from "formik";
 import * as Yup from "yup";
 import handleBlur from "../../../utilities/functions/handleBlur";
-// import publicServer from "../../../utilities/server/publicServer";
-import axios from 'axios';
+import publicServer from "../../../utilities/server/publicServer";
+// import { useRef,useState } from "react";
+import {useEffect, useState} from 'react';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -14,6 +15,37 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Currencyform() {
   const classes = useStyles();
+  const API_KEY = process.env.API_KEY  
+  const [country, setCountries] = useState({
+    loading: true,
+    data: {},
+    notFound: false,
+  })
+
+  useEffect(() => {
+    loadCountry();
+  },[])
+
+  const loadCountry = ()=>{
+    publicServer.get(`/currencies?api_key=${API_KEY}`)
+    .then(res => {
+      console.log('res',res)
+      setCountries(prevState => ({
+        ...prevState,
+        loading: false,
+        data: res.data.currencies
+      }))
+    }).catch(error => {
+      setCountries(prevState => ({
+        ...prevState,
+        loading: false,
+        notFound: true
+      }))
+    })
+  }
+
+
+
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -22,13 +54,14 @@ export default function Currencyform() {
     validationSchema: Yup.object().shape({
       amount: Yup.string().max(255).required("amount is required")
     }),    
-
-    onSubmit: (values, actions) => {
-      // const currencyForm = {
-      //   amount: values.amount
-      // };
-      console.log('hi');
-      axios.get("https://api.fastforex.io/fetch-all?api_key=213b15dcf9-8b11e172b3-qzcwzl")
+    
+    onSubmit: (values) => {
+      const currencyForm = {
+        amount: values.amount
+      };
+      const API_KEY = process.env.API_KEY   
+      publicServer
+        .get(`/fetch-all?api_key=${API_KEY}`)
         .then((response) => {
           console.log('response',response);
         })
@@ -61,6 +94,24 @@ export default function Currencyform() {
                 value={formik.values.amount}
               />
             </Grid>
+            <Grid item sm={4} xs={4} style={{ textAlign:"right"}}>
+          <Box mt={2}>
+           <Button className={classes.button}>
+              From
+          </Button>
+            <FormControl className={classes.formControl}>
+            <Select onChange={(e) => handleChange(e.target)}
+                      >                
+                {
+                  country.map((ele)=>
+                  <MenuItem>{ ele}</MenuItem>
+                )
+                }
+              </Select>
+            </FormControl>
+          </Box>
+        </Grid>
+
             <Grid item lg={12} md={12} xs={12}>
             <Button
               color="default"

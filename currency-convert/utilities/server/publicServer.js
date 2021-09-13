@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const publicServer =  axios.create({
-  baseURL: process.env.SERVER_URL_V
+  baseURL: process.env.NEXT_PUBLIC_SERVER_URL
 });
 
 export default publicServer;
