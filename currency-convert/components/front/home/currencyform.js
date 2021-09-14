@@ -1,12 +1,13 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Grid, TextField,Button,FormControl,Select } from '@material-ui/core';
+import { Box, Grid, TextField,Button,FormControl,Select,MenuItem } from '@material-ui/core';
 import { Formik, useFormik } from "formik";
 import * as Yup from "yup";
 import handleBlur from "../../../utilities/functions/handleBlur";
 import publicServer from "../../../utilities/server/publicServer";
 // import { useRef,useState } from "react";
 import {useEffect, useState} from 'react';
+import { object } from 'yup/lib/locale';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -16,7 +17,7 @@ const useStyles = makeStyles((theme) => ({
 export default function Currencyform() {
   const classes = useStyles();
   const API_KEY = process.env.API_KEY  
-  const [country, setCountries] = useState({
+  const [countries, setCountries] = useState({
     loading: true,
     data: {},
     notFound: false,
@@ -43,13 +44,15 @@ export default function Currencyform() {
       }))
     })
   }
+ 
 
-
+// console.log('countries',countries.data);
 
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
       amount: "",
+      countryCode: ""
     },
     validationSchema: Yup.object().shape({
       amount: Yup.string().max(255).required("amount is required")
@@ -57,8 +60,11 @@ export default function Currencyform() {
     
     onSubmit: (values) => {
       const currencyForm = {
-        amount: values.amount
+        amount: values.amount,
+        countryCode: values.countryCode,
+
       };
+      console.log(currencyForm);
       const API_KEY = process.env.API_KEY   
       publicServer
         .get(`/fetch-all?api_key=${API_KEY}`)
@@ -96,17 +102,26 @@ export default function Currencyform() {
             </Grid>
             <Grid item sm={4} xs={4} style={{ textAlign:"right"}}>
           <Box mt={2}>
+
            <Button className={classes.button}>
               From
           </Button>
             <FormControl className={classes.formControl}>
-            <Select onChange={(e) => handleChange(e.target)}
-                      >                
-                {
-                  country.map((ele)=>
-                  <MenuItem>{ ele}</MenuItem>
-                )
-                }
+            <Select
+                labelId="countryCode"
+                className="siCustomInput"
+                id="countryCode"
+                error={Boolean(formik.touched.countryCode && formik.errors.countryCode)}
+                value={formik.values.countryCode}
+                onChange={formik.handleChange}
+                label="Article Category"
+                name="countryCode"
+            >
+              {
+                Object.keys(countries.data).map((countryCode, i) => (
+                  <MenuItem key={countryCode}>{countryCode}:{countries.data[countryCode]}</MenuItem>
+                ))
+              }
               </Select>
             </FormControl>
           </Box>
